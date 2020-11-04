@@ -5,6 +5,19 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <Platforms>AnyCPU;x64</Platforms>
     <ApplicationIcon>icon.ico</ApplicationIcon>
+    <Version>0.1.0</Version>
+    <Authors>Matic Babnik</Authors>
+    <Company>Weebify.me</Company>
+    <Product>WeebCLI</Product>
+    <Description>A CLI for common video tasks used for creating HSL/DASH streams.</Description>
+    <Copyright>Weebify 2020</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <NeutralLanguage>en</NeutralLanguage>
+    <PackageIcon>icon.png</PackageIcon>
+    <RepositoryUrl>https://github.com/MaticBabnik/WeebCli</RepositoryUrl>
+    <RepositoryType>GIT</RepositoryType>
+    <PackageTags>Weeb weebify ffmpeg HSL DASH CLI</PackageTags>
+    <PackageReleaseNotes>POG</PackageReleaseNotes>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -26,10 +39,19 @@
   <ItemGroup>
     <None Remove="ffmpeg\ffl" />
     <None Remove="ffmpeg\ffm" />
+    <None Remove="ffmpeg\ffmpeg.md" />
     <None Remove="ffmpeg\ffmpegl" />
     <None Remove="ffmpeg\ffmpegm" />
     <None Remove="ffmpeg\ffmpegw.exe" />
     <None Remove="ffmpeg\ffw.exe" />
+    <None Include="..\..\..\..\Desktop\icon.png">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+    <None Include="icon.png">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
   </ItemGroup>
 
   <ItemGroup>
@@ -37,6 +59,9 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="ffmpeg\ffm">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="ffmpeg\ffmpeg.md">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="ffmpeg\ffw.exe">
