@@ -18,7 +18,7 @@ namespace WeebCli
     {
 
         private static readonly string AppRoot = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location);
-        private static readonly string[] AcceptedExtensions = {"mkv","mp4"};
+        private static readonly string[] AcceptedExtensions = { "mkv", "mp4", "m4v" };
 
         /// <summary>
         /// Returns "\ffmpeg.exe" on windows and "\ffmpeg" on unix
@@ -27,23 +27,41 @@ namespace WeebCli
         {
             get
             {
-                return RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"ffmpeg\ffw.exe" : RuntimeInformation.IsOSPlatform(OSPlatform.Linux)? @"ffmpeg/ffl": @"ffmpeg/ffm";
+                return RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"ffmpeg\ffw.exe" : RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? @"ffmpeg/ffl" : @"ffmpeg/ffm";
             }
         }
 
+        [Verb("dashgen", HelpText = "Generates a DASH video")]
+        class DashGenOptions
+        {
+            [Option('i', "input", Required = true, HelpText = "File to generate the DASH video from")]
+            public string Input { get; set; }
+
+            [Value(0, Min = 1, Max = 10)]
+            public IEnumerable<string> Formats { get; set; }
+
+            [Option('o', "output-dir", HelpText = "Directory in which to output",Default = "")]
+            public string OutputDir { get; set; }
+
+            [Option('n', "nvenc", HelpText = "Use NVENC for encoding")]
+            public bool Accel { get; set; }
+
+        }
 
         [Verb("pregen", HelpText = "Generates previews")]
         class PreGenOptions
         {
+
+            [Option('o', "output",Default ="pre%n.jpg", HelpText = "Output filename. Format must be \"path/to/folder/file%n.jpg\" %n gets replaced with the frame number.")]
+            public string Output { get; set; }
+
+            [Option('q', "jpeg-quality",Default =20,HelpText ="Sets the output jpeg quality.")]
+            public int Quality { get; set; }
             [Option('i', "input", Required = true, HelpText = "File to open/generate previews for")]
             public string Input { get; set; }
 
             [Option('f', "frequency", Default = "1", Required = false, HelpText = "Preview frequency. -f 1/2 means that one frame will be previewed for 2 seconds.")]
-            public string Frequency
-            {
-                get;
-                set;
-            }
+            public string Frequency { get; set; }
 
             [Option('w', "width", Default = -2, Required = false, HelpText = "Preview frame width. Use -2 to keep aspect ratio.")]
             public int Width { get; set; }
@@ -54,7 +72,7 @@ namespace WeebCli
 
         static int Main(string[] args)
         {
-            
+
             #region splash
             Console.ForegroundColor = ConsoleColor.Blue;
             Console.WriteLine("_________________________________");
@@ -70,14 +88,16 @@ namespace WeebCli
                 PrintAndExit("No FFMPEG", ConsoleColor.Red, -1);
             }
 
-            return CommandLine.Parser.Default.ParseArguments<PreGenOptions>(args).MapResult(
+            return CommandLine.Parser.Default.ParseArguments<PreGenOptions, DashGenOptions>(args).MapResult(
                 (PreGenOptions opts) => PreviewGen(opts),
+                (DashGenOptions opts) => DashGen(opts),
                 errs => 1
             );
         }
         static int PreviewGen(PreGenOptions opts)
         {
-            if (!File.Exists(opts.Input)) { Console.WriteLine("File does not exist"); return 2; }
+            Console.WriteLine(opts.Input);
+            if ( !File.Exists(opts.Input) ) { Console.WriteLine("File does not exist"); return 2; }
             if (!AcceptedExtensions.Contains(opts.Input.Split('.').Last())) { Console.WriteLine("File format not supported"); return 3; }
 
             var ffmpeg = Process.Start(
@@ -87,15 +107,21 @@ namespace WeebCli
                    UseShellExecute = false,
                    FileName = Path.Combine(AppRoot, FfmpegName),
                    RedirectStandardOutput = true,
-                   Arguments = $"-hide_banner -loglevel error -stats -i {opts.Input} -vf \"scale={opts.Width}:{opts.Height}, fps={opts.Frequency}\" -c:v png -f image2pipe -"
+                   Arguments = $"-hide_banner -loglevel error -stats -i {opts.Input.PathFix()} -vf \"scale={opts.Width}:{opts.Height}, fps={opts.Frequency}\" -c:v png -f image2pipe -"
                });
 
             var bytes = ReadStdOut(ffmpeg);
 
             var imgs = PngParser.ParseFrames(bytes);
 
-            WriteOutput(imgs);
+            WriteOutput(imgs,opts);
 
+            return 0;
+        }
+        static int DashGen(DashGenOptions opts)
+        {
+            Console.WriteLine("DASHGEN");
+            throw new NotImplementedException(nameof(DashGen));
             return 0;
         }
         static FList<byte> ReadStdOut(Process p)
@@ -110,11 +136,10 @@ namespace WeebCli
             return bytes;
         }
 
-        static void WriteOutput(List<Image> images)
+        static void WriteOutput(List<Image> images,PreGenOptions opts)
         {
             int w = images[0].Width, h = images[0].Height;
-
-            JpegEncoder enc = new JpegEncoder() { Quality = 20 };
+            JpegEncoder enc = new JpegEncoder() { Quality = opts.Quality };
             for (int i = 0; i < images.Count; i += 100)
             {
                 var img = new Image<Rgb24>(w * 10, h * 10);
@@ -124,8 +149,8 @@ namespace WeebCli
                     {
                         img.Mutate(im => im.DrawImage(images[i + y * 10 + x], new Point(x * w, y * h), 1f));
                     }
-                img.SaveAsJpeg($"pr{i}.jpeg");
-                Console.WriteLine("Wrote map: pr{0:D3}.jpeg", i);
+                img.SaveAsJpeg(opts.Output.Replace("%n",i.ToString()),enc);
+                Console.WriteLine("Wrote map: {0}", opts.Output.Replace("%n", i.ToString()));
             }
         }
 
@@ -145,4 +170,14 @@ namespace WeebCli
         }
 
     }
+    static class Extensions
+    {
+        public static string PathFix(this string a)
+        {
+            if (!a.Contains(' ')) return a;
+            if (a.StartsWith('"') && a.EndsWith('"')) return a;
+            return '"' + a + '"';
+        }
+    }
+
 }
