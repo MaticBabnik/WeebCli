@@ -3,7 +3,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <Platforms>AnyCPU;x64</Platforms>
+    <Platforms>x64</Platforms>
     <ApplicationIcon>icon.ico</ApplicationIcon>
     <Version>0.1.0</Version>
     <Authors>Matic Babnik</Authors>
@@ -20,18 +20,9 @@
     <PackageReleaseNotes>POG</PackageReleaseNotes>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-  </PropertyGroup>
-
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-  </PropertyGroup>
-
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DebugType>embedded</DebugType>
@@ -39,13 +30,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="ffmpeg\ffl" />
-    <None Remove="ffmpeg\ffm" />
-    <None Remove="ffmpeg\ffmpeg.md" />
-    <None Remove="ffmpeg\ffmpegl" />
-    <None Remove="ffmpeg\ffmpegm" />
-    <None Remove="ffmpeg\ffmpegw.exe" />
-    <None Remove="ffmpeg\ffw.exe" />
     <None Include="..\..\..\..\Desktop\icon.png">
       <Pack>True</Pack>
       <PackagePath></PackagePath>
@@ -57,16 +41,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="ffmpeg\ffl">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="ffmpeg\ffm">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="ffmpeg\ffmpeg.md">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="ffmpeg\ffw.exe">
+    <Content Include="weebcli">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
@@ -76,16 +51,4 @@
     <PackageReference Include="SixLabors.ImageSharp" Version="1.0.1" />
     <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="1.0.0-beta0010" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Resource Include="ffmpeg\ffmpegm" />
-    <Resource Include="ffmpeg\ffmpegw.exe" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="ffmpeg\ffmpeg.exe">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
 </Project>

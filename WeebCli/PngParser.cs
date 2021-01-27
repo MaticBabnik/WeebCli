@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Png;
@@ -6,7 +6,7 @@ using SixLabors.ImageSharp.Formats.Png;
 namespace WeebCli
 {
     /// <summary>
-    /// Code foucsed on splitting ffmpeg's piped image output into individual images.
+    /// Code focused on splitting ffmpeg's piped image output into individual images.
     /// </summary>
     public static class PngParser
     {
@@ -14,7 +14,7 @@ namespace WeebCli
         private static readonly byte[] PngEnd = { 73, 69, 78, 68 };
         private const ushort PngMinChunkSize = 12;
         /// <summary>
-        /// Splits ffmpeg piped output into induvidual files
+        /// Splits ffmpeg piped output into individual files
         /// </summary>
         /// <param name="bytes"></param>
         /// <returns></returns>
@@ -27,31 +27,29 @@ namespace WeebCli
 
             for (uint i = 0; i < rb.Length; i++) //this loop exist just in case ffmpeg puts trash between frames/files.
             {
-                if (ArrayCompare(rb, i, i + PngHeader.Length, PngHeader))
+                if (!ArrayCompare(rb, i, i + PngHeader.Length, PngHeader)) continue;
+                Console.CursorLeft = 0;
+                Console.Write("Frames: {0}", images.Count);
+
+                uint currentPngStart = i;
+
+                i += (uint)PngHeader.Length;
+
+                while (i < rb.Length) //this loop walks the whole png untill Iend chunk
                 {
-                    Console.CursorLeft = 0;
-                    Console.Write("Frames: {0}", images.Count);
+                    uint chunkSize = PngMinChunkSize;
 
-                    uint currentPngStart = i;
+                    chunkSize += (uint)(rb[i] << 24 | rb[i + 1] << 16 | rb[i + 2] << 8 | rb[i + 3]);
 
-                    i += (uint)PngHeader.Length;
-
-                    while (i < rb.Length) //this loop walks the whole png untill Iend chunk
+                    if (chunkSize == 12 && ArrayCompare(rb, i + 4, i + 8, PngEnd))
                     {
-                        uint chunkSize = PngMinChunkSize;
+                        images.Add(ImageFromBytes(ref rb, currentPngStart, i));
 
-                        chunkSize += (uint)(rb[i] << 24 | rb[i + 1] << 16 | rb[i + 2] << 8 | rb[i + 3]);
+                        i += chunkSize - 1; //-1 compensates for the +1 at the end of top level for loop
 
-                        if (chunkSize == 12 && ArrayCompare(rb, i + 4, i + 8, PngEnd))
-                        {
-                            images.Add(ImageFromBytes(ref rb, currentPngStart, i));
-
-                            i += chunkSize - 1; //-1 compensates for the +1 at the end of top level for loop
-
-                            break;
-                        }
-                        i += chunkSize;
+                        break;
                     }
+                    i += chunkSize;
                 }
             }
             Console.WriteLine();
@@ -60,13 +58,13 @@ namespace WeebCli
         /// <summary>
         /// Parses an image from raw byte data.
         /// </summary>
-        /// <param name="bytes">Byte array containing atleast one png.</param>
+        /// <param name="bytes">Byte array containing at least one png.</param>
         /// <param name="start">First byte position of a PNG file.</param>
         /// <param name="end">Last byte position of a PNG file.</param>
         /// <returns>ImageSharp image</returns>
-        public static Image ImageFromBytes(ref byte[] bytes, uint start, uint end)
+        private static Image ImageFromBytes(ref byte[] bytes, uint start, uint end)
         {
-            byte[] data = new byte[end - start];
+            var data = new byte[end - start];
             Array.Copy(bytes, start, data, 0, end - start);
             return Image.Load(data, new PngDecoder());
         }
@@ -85,7 +83,7 @@ namespace WeebCli
             return output;
         }
         /// <summary>
-        /// Compares a section of an arrray with another array.
+        /// Compares a section of an array with another array.
         /// </summary>
         /// <typeparam name="T">The type of both arrays. Must implement IComparable</typeparam>
         /// <param name="a">First array</param>
@@ -93,7 +91,7 @@ namespace WeebCli
         /// <param name="end">First array section end</param>
         /// <param name="b">Second array</param>
         /// <returns>True if equal</returns>
-        public static bool ArrayCompare<T>(T[] a, long start, long end, T[] b) where T : IComparable
+        private static bool ArrayCompare<T>(T[] a, long start, long end, T[] b) where T : IComparable
         {
             for (long i = start; i < end; i++)
             {

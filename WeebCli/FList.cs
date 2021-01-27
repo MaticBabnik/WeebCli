@@ -1,4 +1,5 @@
-﻿namespace System.Collections.Generic
+﻿//rider disable all
+namespace System.Collections.Generic
 {
 
     using System;
@@ -78,39 +79,30 @@
         //
         public int Capacity
         {
-            get { return _items.Length; }
+            get => _items.Length;
             set
             {
-                if (value != _items.Length)
+                if (value == _items.Length) return;
+                if (value > 0)
                 {
-
-                    if (value > 0)
+                    T[] newItems = new T[value];
+                    if (_size > 0)
                     {
-                        T[] newItems = new T[value];
-                        if (_size > 0)
-                        {
-                            Array.Copy(_items, 0, newItems, 0, _size);
-                        }
-                        _items = newItems;
+                        Array.Copy(_items, 0, newItems, 0, _size);
                     }
-                    else
-                    {
-                        _items = _emptyArray;
-                    }
+                    _items = newItems;
+                }
+                else
+                {
+                    _items = _emptyArray;
                 }
             }
         }
 
         // Read-only property describing how many elements are in the List. 
-        public int Count
-        {
-            get { return _size; }
-        }
+        public int Count => _size;
 
-        bool System.Collections.IList.IsFixedSize
-        {
-            get { return false; }
-        }
+        bool IList.IsFixedSize => false;
 
 
         // Is this List read-only?
